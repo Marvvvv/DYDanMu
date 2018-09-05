@@ -8,8 +8,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.nio.channels.Channel;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,19 +26,49 @@ public class MsgServiceImpl implements MsgService {
     @Autowired
     ShutUpMapper shutUpMapper;
     @Autowired
-    GiftMapper giftMapper;
+    GiftHistoryMapper giftHistoryMapper;
+    @Autowired
+    BulletHistoryMapper bulletHistoryMapper;
 
 
     private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private List<UEnter> uEnters = new ArrayList<>(); // 节省资源，用来批量插入
-    private List<Gift> generalGifts = new ArrayList<>(); // 节省资源，小礼物批量插入
-
+    private List<GiftHistory> generalGifts = new ArrayList<>(); // 节省资源，小礼物批量插入
+    private List<BulletHistory> bullets = new ArrayList<>(); // 节省纪元，弹幕批量插入
 
 
     @Override
     // 弹幕消息
     public void bulletMsgHandle(Map<String, Object> msg) {
+        // @TODO 直播时500条弹幕插入一次，下播后50条弹幕插入一次
+        if (StringUtils.isNotBlank(msg.get("uid").toString())) {
+            BulletHistory bullet = new BulletHistory();
+            bullet.setRoom_id(Integer.parseInt(msg.get("rid").toString()));
+            bullet.setUid(Integer.parseInt(msg.get("uid").toString()));
+            bullet.setUname(msg.get("nn").toString());
+            bullet.setUlevel(Integer.parseInt(msg.get("level").toString()));
+            bullet.setHeadIcon_url(DYSerializeUtil.headIconUrlEscape(msg.get("ic").toString()));
 
+            // 粉丝牌可能为空
+            String fansCardName = msg.get("bnn").toString();
+            Integer fansCardLevel = Integer.parseInt(msg.get("bl").toString());
+            Integer fansCardRoomId = Integer.parseInt(msg.get("brid").toString());
+            if (StringUtils.isNotBlank(fansCardName)) {
+                bullet.setFans_card_name(fansCardName);
+                bullet.setFans_card_level(fansCardLevel);
+                bullet.setFans_card_room_id(fansCardRoomId);
+            }
+
+            bullet.setContent(msg.get("txt").toString());
+            bullet.setDate(sdf.format(System.currentTimeMillis()));
+
+            bullets.add(bullet);
+
+            if (!bullets.isEmpty() && bullets.size() >= 500) {
+                bulletHistoryMapper.insertBatch(bullets);
+                bullets = new ArrayList<>();
+            }
+        }
     }
 
     @Override
@@ -49,7 +77,7 @@ public class MsgServiceImpl implements MsgService {
         // 普通礼物批量插入
         // 飞机以上礼物单次插入 gfid = 195,196,1005
         if (StringUtils.isNotBlank(msg.get("gfid").toString())) {
-            Gift gift = new Gift();
+            GiftHistory gift = new GiftHistory();
             gift.setRoom_id(Integer.parseInt(msg.get("rid").toString()));
             gift.setUid(Integer.parseInt(msg.get("uid").toString()));
             gift.setUname(msg.get("nn").toString());
@@ -70,22 +98,16 @@ public class MsgServiceImpl implements MsgService {
 
             gift.setDate(sdf.format(System.currentTimeMillis()));
 
-
-
             if (gift.getGift_id() == 195 || gift.getGift_id() == 196 || gift.getGift_id() == 1005) {
                 // 大礼物直接插入
-                giftMapper.insert(gift);
+                giftHistoryMapper.insert(gift);
             } else {
                 // 小礼物放list，批量插入
                 // gfid + uid
 
-
-
-
-
                 generalGifts.add(gift);
                 if (!generalGifts.isEmpty() && generalGifts.size() >= 500) {
-                    giftMapper.insertBatch(generalGifts);
+                    giftHistoryMapper.insertBatch(generalGifts);
                     generalGifts = new ArrayList<>();
                 }
             }
@@ -151,22 +173,25 @@ public class MsgServiceImpl implements MsgService {
         if (StringUtils.isNotBlank(msg.get("did").toString())) {
             ShutUp shutUp = new ShutUp();
             shutUp.setRoom_id(196);
-            shutUp.setExecuter_type(Integer.parseInt(msg.get("type").toString()));
+            shutUp.setExecuter_type(Integer.parseInt(msg.get("otype").toString()));
             shutUp.setExecuter_id(Integer.parseInt(msg.get("sid").toString()));
             shutUp.setExecuter_name(msg.get("snic").toString());
             shutUp.setShutUp_id(Integer.parseInt(msg.get("did").toString()));
             shutUp.setShutUp_name(msg.get("dnic").toString());
-            long endTime = Long.valueOf(msg.get("endTime").toString()) * 1000;
+            long endTime = Long.valueOf(msg.get("endtime").toString()) * 1000L;
             shutUp.setEnd_time(sdf.format(endTime));
             // 计算禁言时间
             long time = endTime - System.currentTimeMillis();
             long oneMin = 1000*60;
+            long tenMin = oneMin*10;
             long oneDay = oneMin*60*24;
             String banTime = "";
             if (time > oneDay) {
                 banTime = "30天";
-            } else if (time > oneMin) {
+            } else if (time > tenMin) {
                 banTime = "1天";
+            } else if (time > oneMin) {
+                banTime = "10分";
             } else {
                 banTime = "1分";
             }

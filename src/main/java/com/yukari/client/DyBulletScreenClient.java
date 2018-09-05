@@ -65,14 +65,14 @@ public class DyBulletScreenClient {
 
     public void init (int roomId,int groupId) {
         // 获取房间的弹幕服务器
-
+        logger.debug("正在获取弹幕服务器...");
         ServerUtil util = new ServerUtil();
         List<ServerInfo> serverList = util.getServers(606118);
         ServerInfo danmuServer = util.getDanmuServers(serverList,606118);
 
         this.hostName = danmuServer.getHost();
         this.port = danmuServer.getPort();
-
+        logger.debug("Server ==> host:" + hostName + "  port:" + port);
 
         // 连接至弹幕服务器
         this.connectionServer();
@@ -99,11 +99,11 @@ public class DyBulletScreenClient {
             bis = new BufferedInputStream(socket.getInputStream());
             bos = new BufferedOutputStream(socket.getOutputStream());
         } catch (UnknownHostException e) {
-            logger.error("Server connetion error,host error",e);
+            logger.error("弹幕服务器地址错误:" + hostName,e);
         } catch (IOException e) {
-            logger.error("Server connetion error,can not connection!",e);
+            logger.error("无法连接到弹幕服务器:" + hostName,e);
         }
-        logger.debug("Server connetion success!");
+        logger.debug("成功连接到弹幕服务器:" + hostName);
     }
 
 
@@ -123,7 +123,7 @@ public class DyBulletScreenClient {
 
             //解析服务器返回的登录信息
             if(DyMessage.parseLoginRespond(recvByte)){
-                logger.debug("Receive login response successfully!");
+                logger.debug("登录至弹幕服务器成功");
 
                 // 登陆成功，加入弹幕分组
                 //获取弹幕服务器加弹幕池请求数据包
@@ -133,12 +133,12 @@ public class DyBulletScreenClient {
                 try {
                     bos.write(joinGroupRequest, 0, joinGroupRequest.length);
                     bos.flush();
-                    logger.debug("Send join group request successfully!");
+                    logger.debug("加入弹幕组成功!");
                 } catch (IOException e) {
-                    logger.error("Send join group request error!");
+                    logger.error("加入弹幕组失败!");
                 }
             } else {
-                logger.error("Receive login response failed!");
+                logger.error("登录至弹幕服务器失败!");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -159,11 +159,10 @@ public class DyBulletScreenClient {
             //向弹幕服务器发送心跳请求数据包
             bos.write(keepAliveRequest, 0, keepAliveRequest.length);
             bos.flush();
-            logger.debug("Send keep alive request successfully!");
+            logger.debug("心跳包发送成功!");
         } catch(Exception e){
             // 服务器重连
-            logger.error("Send keep alive request failed!",e);
-            logger.error("心跳包发送失败，重新连接服务器...");
+            logger.error("心跳包发送失败，重新连接服务器...",e);
             this.readyFlag = false;
             this.init(196,-9999);
         }
@@ -221,4 +220,14 @@ public class DyBulletScreenClient {
     }
 
 
+    /*private void closeConnection () {
+        if (this.socket != null) {
+            try {
+                this.socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+*/
 }

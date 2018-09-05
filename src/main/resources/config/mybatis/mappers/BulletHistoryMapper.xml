@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yukari.dao.BulletHistoryMapper">
+
+    <insert id="insert" parameterType="com.yukari.entity.BulletHistory">
+        INSERT INTO dy_bullet_histoy_196 (room_id, uid, uname, ulevel, headIcon_url, fans_card_name, fans_card_level, fans_card_room_id, content, date)
+        VALUES
+        (#{room_id},#{uid},#{uname},#{ulevel},#{headIcon_url},#{fans_card_name},#{fans_card_level},#{fans_card_room_id},#{content},#{date})
+    </insert>
+
+
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO dy_bullet_histoy_196 (room_id, uid, uname, ulevel, headIcon_url, fans_card_name, fans_card_level, fans_card_room_id, content, date)
+        VALUES
+        <foreach collection="list" item="bullet" separator="," index="index">
+            (#{bullet.room_id},#{bullet.uid},#{bullet.uname},#{bullet.ulevel},#{bullet.headIcon_url},#{bullet.fans_card_name},#{bullet.fans_card_level},#{bullet.fans_card_room_id},#{bullet.content},#{bullet.date})
+        </foreach>
+    </insert>
+
+</mapper>

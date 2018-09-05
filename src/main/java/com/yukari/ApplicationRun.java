@@ -3,6 +3,7 @@ package com.yukari;
 import com.yukari.client.DyBulletScreenClient;
 
 import com.yukari.entity.ServerInfo;
+import com.yukari.utils.ChangeServer;
 import com.yukari.utils.KeepAlive;
 import com.yukari.utils.KeepGetMsg;
 import com.yukari.utils.ServerUtil;
@@ -27,11 +28,7 @@ public class ApplicationRun {
         ApplicationContext context = new ClassPathXmlApplicationContext("classpath:config/spring/applicationContext.xml");
 
         DyBulletScreenClient client = DyBulletScreenClient.getInstance();
-        client.init(988, -9999);
-
-        ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(4);
-        // 每45秒发送一次心跳包
-        scheduledExecutorService.scheduleAtFixedRate(new KeepAlive(), 2L, 45000L, TimeUnit.MILLISECONDS);
+        client.init(196, -9999);
 
         // 发送心跳包线程
         KeepAlive alive = new KeepAlive();
@@ -41,12 +38,9 @@ public class ApplicationRun {
         KeepGetMsg getMsg = new KeepGetMsg();
         getMsg.start();
 
-
-
-        /*ServerUtil util = new ServerUtil();
-        List<ServerInfo> serverList = util.getServers(606118);
-        ServerInfo danmuServer = util.getDanmuServers(serverList,606118);
-        System.out.println(1);*/
+        /*// (定时任务) 每一小时更换一次弹幕服务器？
+        ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
+        scheduledExecutorService.scheduleAtFixedRate(new ChangeServer(),2L,50000L,TimeUnit.MILLISECONDS);*/
 
     }
 

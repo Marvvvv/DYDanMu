@@ -7,7 +7,7 @@ import java.io.Serializable;
 
 @Getter
 @Setter
-public class Gift implements Serializable{
+public class BulletHistory implements Serializable {
 
     private Integer id;
     private Integer room_id;
@@ -15,13 +15,10 @@ public class Gift implements Serializable{
     private String uname;
     private Integer ulevel;
     private String headIcon_url;
-    private Integer gift_id;
-    private Integer gift_amount;
     private String fans_card_name;
     private Integer fans_card_level;
     private Integer fans_card_room_id;
+    private String content;
     private String date;
-
-
 
 }
