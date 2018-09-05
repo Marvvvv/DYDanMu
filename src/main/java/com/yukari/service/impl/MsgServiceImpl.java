@@ -1,0 +1,183 @@
+package com.yukari.service.impl;
+
+import com.yukari.dao.*;
+import com.yukari.entity.*;
+import com.yukari.service.MsgService;
+import com.yukari.utils.DYSerializeUtil;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.nio.channels.Channel;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service
+public class MsgServiceImpl implements MsgService {
+
+    @Autowired
+    UEnterMapper uEnterMapper;
+    @Autowired
+    AnchorOnlineMapper anchorOnlineMapper;
+    @Autowired
+    GiftRadioMapper giftRadioMapper;
+    @Autowired
+    ShutUpMapper shutUpMapper;
+    @Autowired
+    GiftMapper giftMapper;
+
+
+    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private List<UEnter> uEnters = new ArrayList<>(); // 节省资源，用来批量插入
+    private List<Gift> generalGifts = new ArrayList<>(); // 节省资源，小礼物批量插入
+
+
+
+    @Override
+    // 弹幕消息
+    public void bulletMsgHandle(Map<String, Object> msg) {
+
+    }
+
+    @Override
+    // 赠送礼物消息
+    public void giftMsgHandle(Map<String, Object> msg) {
+        // 普通礼物批量插入
+        // 飞机以上礼物单次插入 gfid = 195,196,1005
+        if (StringUtils.isNotBlank(msg.get("gfid").toString())) {
+            Gift gift = new Gift();
+            gift.setRoom_id(Integer.parseInt(msg.get("rid").toString()));
+            gift.setUid(Integer.parseInt(msg.get("uid").toString()));
+            gift.setUname(msg.get("nn").toString());
+            gift.setUlevel(Integer.parseInt(msg.get("level").toString()));
+            gift.setHeadIcon_url(DYSerializeUtil.headIconUrlEscape(msg.get("ic").toString()));
+            gift.setGift_id(Integer.parseInt(msg.get("gfid").toString()));
+            gift.setGift_amount(Integer.parseInt(msg.get("gfcnt").toString()));
+
+            // 粉丝牌可能为空
+            String fansCardName = msg.get("bnn").toString();
+            Integer fansCardLevel = Integer.parseInt(msg.get("bl").toString());
+            Integer fansCardRoomId = Integer.parseInt(msg.get("brid").toString());
+            if (StringUtils.isNotBlank(fansCardName)) {
+                gift.setFans_card_name(fansCardName);
+                gift.setFans_card_level(fansCardLevel);
+                gift.setFans_card_room_id(fansCardRoomId);
+            }
+
+            gift.setDate(sdf.format(System.currentTimeMillis()));
+
+
+
+            if (gift.getGift_id() == 195 || gift.getGift_id() == 196 || gift.getGift_id() == 1005) {
+                // 大礼物直接插入
+                giftMapper.insert(gift);
+            } else {
+                // 小礼物放list，批量插入
+                // gfid + uid
+
+
+
+
+
+                generalGifts.add(gift);
+                if (!generalGifts.isEmpty() && generalGifts.size() >= 500) {
+                    giftMapper.insertBatch(generalGifts);
+                    generalGifts = new ArrayList<>();
+                }
+            }
+        }
+    }
+
+    @Override
+    // 用户进房消息
+    public void enterMsgHandle(Map<String, Object> msg) {
+        UEnter uEnter = new UEnter();
+        uEnter.setRoom_id(Integer.parseInt(msg.get("rid").toString()));
+        uEnter.setUid(Integer.parseInt(msg.get("uid").toString()));
+        uEnter.setUname(msg.get("nn").toString());
+        uEnter.setLevel(Integer.parseInt(msg.get("level").toString()));
+        uEnter.setHeadIcon_url(DYSerializeUtil.headIconUrlEscape(msg.get("ic").toString()));
+        uEnter.setDate(sdf.format(System.currentTimeMillis()));
+        uEnters.add(uEnter);
+
+        if (!uEnters.isEmpty() && uEnters.size() >= 100) {
+            // 100条插入一次
+            uEnterMapper.insertBatch(uEnters);
+            uEnters = new ArrayList<>();
+        }
+    }
+
+    @Override
+    // 开关播消息
+    public void anchorOnlineMsgHandle(Map<String, Object> msg) {
+        AnchorOnline anchorOnline = new AnchorOnline();
+        anchorOnline.setRomm_id(Integer.parseInt(msg.get("rid").toString()));
+        anchorOnline.setOnline_status(Integer.parseInt(msg.get("ss").toString()));
+        anchorOnline.setDate(anchorOnline.getOnline_status() == 1?sdf.format(System.currentTimeMillis()):
+                sdf.format(Long.valueOf(msg.get("endtime").toString()) * 1000));
+        anchorOnlineMapper.insert(anchorOnline);
+    }
+
+    @Override
+    // 超级弹幕消息
+    public void bigBulletMsgHandle(Map<String, Object> msg) {
+
+    }
+
+    @Override
+    // 礼物广播消息
+    public void giftRadioMsgHandle(Map<String, Object> msg) {
+        if (StringUtils.isNotBlank(msg.get("gn").toString())) {
+            GiftRadio giftRadio = new GiftRadio();
+            giftRadio.setRoom_id(Integer.parseInt(msg.get("drid").toString()));
+            giftRadio.setGiver(msg.get("sn").toString());
+            giftRadio.setAnchor_name(msg.get("dn").toString());
+            giftRadio.setGift_id(Integer.parseInt(msg.get("gfid").toString()));
+            giftRadio.setGift_name(msg.get("gn").toString());
+            giftRadio.setAmount(Integer.parseInt(msg.get("gc").toString()));
+            giftRadio.setGift_style(Integer.parseInt(msg.get("es").toString()));
+            giftRadio.setDate(sdf.format(System.currentTimeMillis()));
+            giftRadioMapper.insert(giftRadio);
+        }
+    }
+
+    @Override
+    // 禁言消息
+    public void shutUpMsgHandle(Map<String, Object> msg) {
+        if (StringUtils.isNotBlank(msg.get("did").toString())) {
+            ShutUp shutUp = new ShutUp();
+            shutUp.setRoom_id(196);
+            shutUp.setExecuter_type(Integer.parseInt(msg.get("type").toString()));
+            shutUp.setExecuter_id(Integer.parseInt(msg.get("sid").toString()));
+            shutUp.setExecuter_name(msg.get("snic").toString());
+            shutUp.setShutUp_id(Integer.parseInt(msg.get("did").toString()));
+            shutUp.setShutUp_name(msg.get("dnic").toString());
+            long endTime = Long.valueOf(msg.get("endTime").toString()) * 1000;
+            shutUp.setEnd_time(sdf.format(endTime));
+            // 计算禁言时间
+            long time = endTime - System.currentTimeMillis();
+            long oneMin = 1000*60;
+            long oneDay = oneMin*60*24;
+            String banTime = "";
+            if (time > oneDay) {
+                banTime = "30天";
+            } else if (time > oneMin) {
+                banTime = "1天";
+            } else {
+                banTime = "1分";
+            }
+            shutUp.setBan_time(banTime);
+            shutUpMapper.insert(shutUp);
+        }
+    }
+
+    @Override
+    // 贵族列表信息
+    public void nobleMsgHandle(Map<String, Object> msg) {
+
+    }
+}

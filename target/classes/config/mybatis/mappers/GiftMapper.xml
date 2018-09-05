@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yukari.dao.GiftMapper">
+
+    <insert id="insert" parameterType="com.yukari.entity.Gift">
+        INSERT INTO dy_gift_history_196 (room_id, uid, uname, ulevel, headIcon_url, gift_id, gift_amount, fans_card_name, fans_card_level, fans_card_room_id, date)
+        VALUES (#{room_id},#{uid},#{uname},#{ulevel},#{headIcon_url},#{gift_id},#{gift_amount},#{fans_card_name},#{fans_card_level},#{fans_card_room_id},#{date})
+    </insert>
+
+
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO dy_gift_history_196 (room_id, uid, uname, ulevel, headIcon_url, gift_id, gift_amount, fans_card_name, fans_card_level, fans_card_room_id, date) VALUES
+        <foreach collection="list" item="gift" separator="," index="index">
+            (#{gift.room_id},#{gift.uid},#{gift.uname},#{gift.ulevel},#{gift.headIcon_url},#{gift.gift_id},#{gift.gift_amount},#{gift.fans_card_name},#{gift.fans_card_level},#{gift.fans_card_room_id},#{gift.date})
+        </foreach>
+    </insert>
+
+</mapper>

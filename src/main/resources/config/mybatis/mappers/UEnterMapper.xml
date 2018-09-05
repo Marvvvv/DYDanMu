@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yukari.dao.UEnterMapper">
+
+    <insert id="insert" parameterType="com.yukari.entity.UEnter">
+        INSERT INTO dy_uenter_196 (room_id,uid,uname,headIcon_url,level,date) VALUES (#{room_id},#{uid},#{uname},#{headIcon_url},#{level},#{date})
+    </insert>
+
+
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO dy_uenter_196 (room_id,uid,uname,headIcon_url,level,date) VALUES
+        <foreach collection="list" item="uEnter" separator="," index="index">
+            (#{uEnter.room_id},#{uEnter.uid},#{uEnter.uname},#{uEnter.headIcon_url},#{uEnter.level},#{uEnter.date})
+        </foreach>
+    </insert>
+
+</mapper>

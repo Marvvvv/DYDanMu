@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yukari.dao.GiftRadioMapper">
+
+    <insert id="insert" parameterType="com.yukari.entity.GiftRadio">
+        INSERT INTO dy_gift_radio (room_id, giver, anchor_name, gift_id, gift_name, amount, gift_style, date)
+        VALUES (#{room_id},#{giver},#{anchor_name},#{gift_id},#{gift_name},#{amount},#{gift_style},#{date})
+    </insert>
+
+</mapper>
