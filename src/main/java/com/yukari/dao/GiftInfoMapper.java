@@ -1,11 +1,11 @@
 package com.yukari.dao;
 
-import com.yukari.entity.GiftInfo;
+import com.yukari.entity.Gift;
 
 import java.util.List;
 
 public interface GiftInfoMapper {
 
-    List<GiftInfo> getAllGift ();
+    List<Gift> getAllGift ();
 
 }

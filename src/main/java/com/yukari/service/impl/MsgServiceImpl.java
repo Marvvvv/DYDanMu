@@ -1,11 +1,13 @@
 package com.yukari.service.impl;
 
+import com.yukari.cache.GlobalCache;
 import com.yukari.dao.*;
 import com.yukari.entity.*;
 import com.yukari.service.MsgService;
 import com.yukari.utils.DYSerializeUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
@@ -30,18 +32,30 @@ public class MsgServiceImpl implements MsgService {
     @Autowired
     BulletHistoryMapper bulletHistoryMapper;
 
-
     private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private List<UEnter> uEnters = new ArrayList<>(); // 节省资源，用来批量插入
     private List<GiftHistory> generalGifts = new ArrayList<>(); // 节省资源，小礼物批量插入
     private List<BulletHistory> bullets = new ArrayList<>(); // 节省纪元，弹幕批量插入
 
 
+    @Value("${bullet.openplay.maxSize}")
+    int bulletOpenplayMaxsize;
+
+    @Value("${gift.maxSize}")
+    int giftMaxSize;
+
+    @Value("${bullet.colseplay.maxSize}")
+    int bulletColseplayMaxSize;
+
+    @Value("${uenter.maxSize}")
+    int uenterMaxSize;
+
+
     @Override
     // 弹幕消息
     public void bulletMsgHandle(Map<String, Object> msg) {
-        // @TODO 直播时500条弹幕插入一次，下播后50条弹幕插入一次
-        if (StringUtils.isNotBlank(msg.get("uid").toString())) {
+        // 直播时500条弹幕插入一次，下播后100条弹幕插入一次
+        if (StringUtils.isNotBlank(msg.get("uid").toString()) && msg.containsKey("txt")) {
             BulletHistory bullet = new BulletHistory();
             bullet.setRoom_id(Integer.parseInt(msg.get("rid").toString()));
             bullet.setUid(Integer.parseInt(msg.get("uid").toString()));
@@ -64,9 +78,10 @@ public class MsgServiceImpl implements MsgService {
 
             bullets.add(bullet);
 
-            if (!bullets.isEmpty() && bullets.size() >= 500) {
+            int insertSize = GlobalCache.getGlobalCache().isOnline()?bulletOpenplayMaxsize:bulletColseplayMaxSize;
+            if (!bullets.isEmpty() && bullets.size() >= insertSize) {
                 bulletHistoryMapper.insertBatch(bullets);
-                bullets = new ArrayList<>();
+                bullets.clear();
             }
         }
     }
@@ -74,8 +89,6 @@ public class MsgServiceImpl implements MsgService {
     @Override
     // 赠送礼物消息
     public void giftMsgHandle(Map<String, Object> msg) {
-        // 普通礼物批量插入
-        // 飞机以上礼物单次插入 gfid = 195,196,1005
         if (StringUtils.isNotBlank(msg.get("gfid").toString())) {
             GiftHistory gift = new GiftHistory();
             gift.setRoom_id(Integer.parseInt(msg.get("rid").toString()));
@@ -98,19 +111,12 @@ public class MsgServiceImpl implements MsgService {
 
             gift.setDate(sdf.format(System.currentTimeMillis()));
 
-            if (gift.getGift_id() == 195 || gift.getGift_id() == 196 || gift.getGift_id() == 1005) {
-                // 大礼物直接插入
-                giftHistoryMapper.insert(gift);
-            } else {
-                // 小礼物放list，批量插入
-                // gfid + uid
-
-                generalGifts.add(gift);
-                if (!generalGifts.isEmpty() && generalGifts.size() >= 500) {
-                    giftHistoryMapper.insertBatch(generalGifts);
-                    generalGifts = new ArrayList<>();
-                }
+            generalGifts.add(gift);
+            if (!generalGifts.isEmpty() && generalGifts.size() >= giftMaxSize) {
+                giftHistoryMapper.insertBatch(generalGifts);
+                generalGifts.clear();
             }
+
         }
     }
 
@@ -126,10 +132,10 @@ public class MsgServiceImpl implements MsgService {
         uEnter.setDate(sdf.format(System.currentTimeMillis()));
         uEnters.add(uEnter);
 
-        if (!uEnters.isEmpty() && uEnters.size() >= 100) {
+        if (!uEnters.isEmpty() && uEnters.size() >= uenterMaxSize) {
             // 100条插入一次
             uEnterMapper.insertBatch(uEnters);
-            uEnters = new ArrayList<>();
+            uEnters.clear();
         }
     }
 
@@ -137,10 +143,12 @@ public class MsgServiceImpl implements MsgService {
     // 开关播消息
     public void anchorOnlineMsgHandle(Map<String, Object> msg) {
         AnchorOnline anchorOnline = new AnchorOnline();
-        anchorOnline.setRomm_id(Integer.parseInt(msg.get("rid").toString()));
+        anchorOnline.setRoom_id(Integer.parseInt(msg.get("rid").toString()));
         anchorOnline.setOnline_status(Integer.parseInt(msg.get("ss").toString()));
         anchorOnline.setDate(anchorOnline.getOnline_status() == 1?sdf.format(System.currentTimeMillis()):
                 sdf.format(Long.valueOf(msg.get("endtime").toString()) * 1000));
+        // 修改开播状态
+        GlobalCache.getGlobalCache().setOnline(anchorOnline.getOnline_status() == 1);
         anchorOnlineMapper.insert(anchorOnline);
     }
 
@@ -205,4 +213,7 @@ public class MsgServiceImpl implements MsgService {
     public void nobleMsgHandle(Map<String, Object> msg) {
 
     }
+
+
+
 }

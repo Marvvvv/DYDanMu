@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yukari.dao.AnchorMapper">
+
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO dy_anchor_info (anchor_name, room_id, uid) VALUES
+        <foreach collection="list" item="anchor" separator="," index="index">
+            (#{anchor.anchor_name},#{anchor.room_id},#{anchor.uid})
+        </foreach>
+    </insert>
+
+
+    <select id="quertAllRoomId" resultType="java.lang.Integer">
+        SELECT DISTINCT room_id FROM dy_anchor_info
+    </select>
+
+
+</mapper>

@@ -9,7 +9,7 @@ import java.io.Serializable;
 
 @Getter
 @Setter
-public class GiftInfo implements Serializable {
+public class Gift implements Serializable {
 
     private Integer id;
     private Integer gift_id;

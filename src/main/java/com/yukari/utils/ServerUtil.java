@@ -1,6 +1,9 @@
 package com.yukari.utils;
 
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.yukari.cache.GlobalCache;
 import com.yukari.entity.Message;
 import com.yukari.entity.ServerInfo;
 import com.yukari.msg.MsgView;
@@ -21,7 +24,7 @@ public class ServerUtil {
     private static final String REGEX_SERVER = "%7B%22ip%22%3A%22(.*?)%22%2C%22port%22%3A%22(.*?)%22%7D%2C";
 
     public List<ServerInfo> getServers (int roomId) {
-        Connection conn = Jsoup.connect("http://www.douyu.com/" + roomId).userAgent("Mozilla").timeout(30 * 1000).ignoreContentType(true);
+        Connection conn = Jsoup.connect("http://www.douyu.com/ztCache/WebM/room/" + roomId).userAgent("Mozilla").timeout(30 * 1000).ignoreContentType(true);
         try {
             Document doc = conn.get();
             Pattern pa = Pattern.compile(REGEX_SERVER);
@@ -34,6 +37,17 @@ public class ServerUtil {
         } catch (IOException e) {
             return null;
         }
+    }
+
+
+    public void isOnline (int roomId) {
+        Connection conn = Jsoup.connect("http://open.douyucdn.cn/api/RoomApi/room/" + roomId).userAgent("Mozilla").timeout(30 * 1000).ignoreContentType(true);
+        try {
+            Document doc = conn.get();
+            JSONObject object = JSON.parseObject(doc.text());
+            String room_status = object.getJSONObject("data").get("room_status").toString();
+            GlobalCache.getGlobalCache().setOnline("1".equals(room_status));
+        }catch (Exception e) {}
     }
 
 
@@ -109,12 +123,5 @@ public class ServerUtil {
 
         return resList;
     }
-
-
-    public static void main (String[] args) {
-
-
-    }
-
 
 }

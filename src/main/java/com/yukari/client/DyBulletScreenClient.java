@@ -1,6 +1,7 @@
 package com.yukari.client;
 
 
+import com.yukari.ApplicationRun;
 import com.yukari.dao.UEnterMapper;
 import com.yukari.entity.ServerInfo;
 import com.yukari.msg.DyMessage;
@@ -15,6 +16,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -51,6 +53,9 @@ public class DyBulletScreenClient {
 
     private static DyBulletScreenClient client;
 
+    private int room_id;
+
+
     /**
      * 单例获取方法，客户端单例模式访问
      * @return
@@ -66,9 +71,13 @@ public class DyBulletScreenClient {
     public void init (int roomId,int groupId) {
         // 获取房间的弹幕服务器
         logger.debug("正在获取弹幕服务器...");
+
+        this.room_id = roomId;
+
         ServerUtil util = new ServerUtil();
-        List<ServerInfo> serverList = util.getServers(606118);
-        ServerInfo danmuServer = util.getDanmuServers(serverList,606118);
+        List<ServerInfo> serverList = util.getServers(roomId); // 获取弹幕服务器
+        ServerInfo danmuServer = util.getDanmuServers(serverList,roomId);
+        util.isOnline(roomId); // 设置开播状态
 
         this.hostName = danmuServer.getHost();
         this.port = danmuServer.getPort();
@@ -80,6 +89,7 @@ public class DyBulletScreenClient {
         this.connectionRoom(roomId,groupId);
         // 设置客户端就绪标记为就绪状态
         readyFlag = true;
+
     }
 
     public boolean getReadyFlag() {
@@ -164,7 +174,7 @@ public class DyBulletScreenClient {
             // 服务器重连
             logger.error("心跳包发送失败，重新连接服务器...",e);
             this.readyFlag = false;
-            this.init(196,-9999);
+            this.init(room_id,-9999);
         }
     }
 
