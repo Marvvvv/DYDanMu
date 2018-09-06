@@ -44,8 +44,8 @@ public class MsgServiceImpl implements MsgService {
     @Value("${gift.maxSize}")
     int giftMaxSize;
 
-    @Value("${bullet.colseplay.maxSize}")
-    int bulletColseplayMaxSize;
+    @Value("${bullet.closeplay.maxSize}")
+    int bulletCloseplayMaxSize;
 
     @Value("${uenter.maxSize}")
     int uenterMaxSize;
@@ -78,7 +78,7 @@ public class MsgServiceImpl implements MsgService {
 
             bullets.add(bullet);
 
-            int insertSize = GlobalCache.getGlobalCache().isOnline()?bulletOpenplayMaxsize:bulletColseplayMaxSize;
+            int insertSize = GlobalCache.getGlobalCache().isOnline()?bulletOpenplayMaxsize:bulletCloseplayMaxSize;
             if (!bullets.isEmpty() && bullets.size() >= insertSize) {
                 bulletHistoryMapper.insertBatch(bullets);
                 bullets.clear();
