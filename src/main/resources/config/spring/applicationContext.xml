@@ -6,6 +6,7 @@
 	   xmlns:context="http://www.springframework.org/schema/context"
 	   xmlns:p="http://www.springframework.org/schema/p"
 	   xmlns:cache="http://www.springframework.org/schema/cache" xmlns:util="http://www.springframework.org/schema/util"
+	   xmlns:task="http://www.springframework.org/schema/task"
 	   xsi:schemaLocation="http://www.springframework.org/schema/beans
        http://www.springframework.org/schema/beans/spring-beans.xsd
    	   http://www.springframework.org/schema/aop
@@ -14,13 +15,17 @@
        http://www.springframework.org/schema/tx/spring-tx.xsd
        http://www.springframework.org/schema/context
        http://www.springframework.org/schema/context/spring-context.xsd
-       http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+       http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
 
     <!-- 激活annotation功能 -->
 	<context:annotation-config />
 
 	<!-- 开启定时任务 -->
-	<!--<task:annotation-driven/>-->
+	<bean id="changeServerTask" class="com.yukari.utils.ChangeServerTask"/>
+
+	<task:scheduled-tasks>
+		<task:scheduled ref="changeServerTask" method="run" cron="0 0 3,15 * * ? "/>
+	</task:scheduled-tasks>
 
 	<context:component-scan base-package="com.yukari.*"/>
 
@@ -43,6 +48,7 @@
 		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
 		<property name="dataSource" ref="dataSource" />
 	</bean>
+
 	<tx:advice id="txAdvice" transaction-manager="txManager">
 		<tx:attributes>
 			<tx:method name="get*" read-only="true" propagation="NOT_SUPPORTED" />
