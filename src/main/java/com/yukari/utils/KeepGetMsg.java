@@ -18,9 +18,11 @@ public class KeepGetMsg extends Thread {
     	DyBulletScreenClient danmuClient = DyBulletScreenClient.getInstance();
     	
     	//判断客户端就绪状态
-        while(danmuClient.getReadyFlag()) {
-        	//获取服务器发送的弹幕信息
-        	danmuClient.getServerMsg();
+        while(true) {
+            if (danmuClient.getReadyFlag()) {
+                //获取服务器发送的弹幕信息
+                danmuClient.getServerMsg();
+            }
         }
     }
 }

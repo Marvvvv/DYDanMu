@@ -88,7 +88,7 @@ public class DyBulletScreenClient {
         // 连接到指定直播间，以及弹幕分组
         this.connectionRoom(roomId,groupId);
         // 设置客户端就绪标记为就绪状态
-        readyFlag = true;
+        this.readyFlag = true;
 
     }
 
