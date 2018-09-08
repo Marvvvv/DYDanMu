@@ -12,8 +12,7 @@ public class ChangeServerTask {
         // 更换服务器重连
         logger.info("更换弹幕服务器...");
         DyBulletScreenClient client = DyBulletScreenClient.getInstance();
-        client.setReadyFlag(false);
-        client.init(196, -9999);
+        client.reConnectServer();
     }
 
 }

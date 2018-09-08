@@ -34,13 +34,10 @@ public class ApplicationRun {
             KeepAlive alive = new KeepAlive();
             alive.start();
 
+
             // 接收弹幕服务器的消息
             KeepGetMsg getMsg = new KeepGetMsg();
             getMsg.start();
-
-        /*// (定时任务) 每一小时更换一次弹幕服务器？
-        ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
-        scheduledExecutorService.scheduleAtFixedRate(new ChangeServer(),2L,50000L,TimeUnit.MILLISECONDS);*/
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -53,7 +50,6 @@ public class ApplicationRun {
                 }
             }
         }
-
 
     }
 

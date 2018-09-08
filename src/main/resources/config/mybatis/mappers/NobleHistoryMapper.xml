@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yukari.dao.NobleHistoryMapper">
+
+    <insert id="insert" parameterType="com.yukari.entity.NobleHistory">
+        INSERT INTO dy_noble_openup_renew (type, uid, uname, headIcon_url, room_id, anchor_name, noble_type, noble_name, date)
+        VALUES (#{type},#{uid},#{uname},#{headIcon_url},#{room_id},#{anchor_name},#{noble_type},#{noble_name},#{date});
+    </insert>
+
+
+</mapper>

@@ -31,11 +31,13 @@ public class MsgServiceImpl implements MsgService {
     GiftHistoryMapper giftHistoryMapper;
     @Autowired
     BulletHistoryMapper bulletHistoryMapper;
+    @Autowired
+    NobleHistoryMapper nobleHistoryMapper;
 
     private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private List<UEnter> uEnters = new ArrayList<>(); // 节省资源，用来批量插入
-    private List<GiftHistory> generalGifts = new ArrayList<>(); // 节省资源，小礼物批量插入
-    private List<BulletHistory> bullets = new ArrayList<>(); // 节省纪元，弹幕批量插入
+//    private List<GiftHistory> generalGifts = new ArrayList<>(); // 节省资源，小礼物批量插入
+    private List<BulletHistory> bullets = new ArrayList<>(); // 节省资源，弹幕批量插入
 
 
     @Value("${bullet.openplay.maxSize}")
@@ -89,7 +91,8 @@ public class MsgServiceImpl implements MsgService {
     @Override
     // 赠送礼物消息
     public void giftMsgHandle(Map<String, Object> msg) {
-        if (StringUtils.isNotBlank(msg.get("gfid").toString())) {
+        // 不记录小礼物了，大礼物可通过礼物广播获取
+        /*if (StringUtils.isNotBlank(msg.get("gfid").toString())) {
             GiftHistory gift = new GiftHistory();
             gift.setRoom_id(Integer.parseInt(msg.get("rid").toString()));
             gift.setUid(Integer.parseInt(msg.get("uid").toString()));
@@ -117,8 +120,8 @@ public class MsgServiceImpl implements MsgService {
                 generalGifts.clear();
             }
 
-        }
-    }
+        }*/
+   }
 
     @Override
     // 用户进房消息
@@ -180,7 +183,7 @@ public class MsgServiceImpl implements MsgService {
     public void shutUpMsgHandle(Map<String, Object> msg) {
         if (StringUtils.isNotBlank(msg.get("did").toString())) {
             ShutUp shutUp = new ShutUp();
-            shutUp.setRoom_id(196);
+            shutUp.setRoom_id(Integer.parseInt(msg.get("rid").toString()));
             shutUp.setExecuter_type(Integer.parseInt(msg.get("otype").toString()));
             shutUp.setExecuter_id(Integer.parseInt(msg.get("sid").toString()));
             shutUp.setExecuter_name(msg.get("snic").toString());
@@ -208,12 +211,61 @@ public class MsgServiceImpl implements MsgService {
         }
     }
 
-    @Override
-    // 贵族列表信息
-    public void nobleMsgHandle(Map<String, Object> msg) {
 
+    @Override
+    // 开通/续费贵族消息
+    public void openOrRenewNobleMsgHandle(Map<String, Object> msg) {
+        if (StringUtils.isNotBlank(msg.get("uid").toString())) {
+            NobleHistory nobleHistory = new NobleHistory();
+            nobleHistory.setType("anbc".equals(msg.get("type").toString())?1:2);
+            nobleHistory.setUid(Integer.parseInt(msg.get("uid").toString()));
+            nobleHistory.setUname(msg.get("unk").toString());
+            nobleHistory.setHeadIcon_url(DYSerializeUtil.headIconUrlEscape(msg.get("uic").toString()));
+            nobleHistory.setRoom_id(Integer.parseInt(msg.get("drid").toString()));
+            nobleHistory.setAnchor_name(msg.get("donk").toString());
+            int nobleType = Integer.parseInt(msg.get("nl").toString());
+            nobleHistory.setNoble_type(nobleType);
+            nobleHistory.setNoble_name(getNobleName(nobleType));
+            nobleHistory.setDate(sdf.format(System.currentTimeMillis()));
+            nobleHistoryMapper.insert(nobleHistory);
+        }
     }
 
+    @Override
+    // 礼物连击广播
+    public void giftHitRadioMsgHandle(Map<String, Object> msg) {
+        if (StringUtils.isNotBlank(msg.get("sid").toString())) {
+            GiftRadio gift = new GiftRadio();
+            gift.setRoom_id(Integer.parseInt(msg.get("drid").toString()));
+            gift.setGiver(msg.get("sn").toString());
+            gift.setAnchor_name(msg.get("dn").toString());
+            gift.setGift_id(Integer.parseInt(msg.get("gfid").toString()));
+            gift.setGift_name(msg.get("gn").toString());
+            gift.setAmount(Integer.parseInt(msg.get("gc").toString()));
+            gift.setDate(sdf.format(System.currentTimeMillis()));
+            giftRadioMapper.insert(gift);
+        }
+    }
+
+
+    private String getNobleName (int type) {
+        switch (type) {
+            case 1:
+                return "骑士";
+            case 2:
+                return "子爵";
+            case 3:
+                return "伯爵";
+            case 4:
+                return "公爵";
+            case 5:
+                return "国王";
+            case 6:
+                return "皇帝";
+            default:
+                return "游侠";
+        }
+    }
 
 
 }

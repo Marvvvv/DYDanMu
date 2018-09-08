@@ -30,6 +30,10 @@ public class MsgUtil {
     private static final String SHUT_UP = "newblackres"; // 禁言
     private static final String NOBLE = "online_noble_list"; // 贵族详情
     private static final String NOBLE_NUM_INFO = "noble_num_info"; // 贵族数量
+    private static final String OPEN_UP_NOBLE = "anbc";  // 开通贵族
+    private static final String RENEW_NOBLE = "rnewbc";  // 续费贵族
+    private static final String GIFT_HIT_RADIO = "bgbc"; // 礼物连击广播
+
 
 
     @Autowired
@@ -43,7 +47,7 @@ public class MsgUtil {
     }
 
 
-    public static void msgHandle(byte[] buffer, int len){
+    public static void msgHandle(byte[] buffer, int len) {
         List<String> listMsg = new ArrayList<>();
 
         try {
@@ -58,18 +62,18 @@ public class MsgUtil {
     }
 
 
-    public static List<String> splitResponse(byte[] buffer) throws UnsupportedEncodingException{
-        if (buffer == null || buffer.length <= 0) return null;
+    public static List<String> splitResponse(byte[] buffer) throws UnsupportedEncodingException {
+        if (buffer == null || buffer.length <= 0) {return null;}
 
         List<String> resList = new ArrayList<>();
         String byteArray = HexUtil.bytes2HexString(buffer).toLowerCase();
         String[] responseStrings = byteArray.split("b2020000");
         int end;
         for (int i = 1; i < responseStrings.length; i++) {
-            if (!responseStrings[i].contains("00")) continue;
+            if (!responseStrings[i].contains("00")) {continue;}
             end = responseStrings[i].indexOf("00");
             byte[] bytes = HexUtil.hexString2Bytes(responseStrings[i].substring(0, end));
-            if (bytes != null) resList.add(new String(bytes,"UTF-8"));
+            if (bytes != null) {resList.add(new String(bytes, "UTF-8"));}
         }
 
         return resList;
@@ -93,9 +97,8 @@ public class MsgUtil {
                 // 结束心跳和获取弹幕线程
                 client.setReadyFlag(false);
                 // 重新连接服务器及房间
-                logger.debug("服务器发生错误，重新连接...");
-                client.setReadyFlag(false);
-                client.init(196, -9999);
+                logger.info("服务器发生错误，重新连接...");
+                client.reConnectServer();
             }
 
             /* 根据消息类型进行处理 */
@@ -105,17 +108,17 @@ public class MsgUtil {
                     case BULLET:
                         // 弹幕消息
                         msgUtil.msgService.bulletMsgHandle(msg);
-                        logger.debug("普通弹幕消息==>" + msg.toString());
+//                        logger.debug("普通弹幕消息==>" + msg.toString());
                         break;
                     case GIFT:
                         // 礼物消息
                         msgUtil.msgService.giftMsgHandle(msg);
-                        logger.debug("赠送礼物消息==>" + msg.toString());
+//                        logger.debug("赠送礼物消息==>" + msg.toString());
                         break;
                     case ENTER:
                         // 用户进入房间
                         msgUtil.msgService.enterMsgHandle(msg);
-                        logger.debug("用户进房消息==>" + msg.toString());
+//                        logger.debug("用户进房消息==>" + msg.toString());
                         break;
                     case ANCHOR_ONLINE:
                         // 房间开关播
@@ -139,18 +142,29 @@ public class MsgUtil {
                         break;
                     case NOBLE:
                         // 贵族列表
-                        msgUtil.msgService.nobleMsgHandle(msg);
-                        logger.debug("贵族列表消息==>" + msg.toString());
+//                        logger.debug("贵族列表消息==>" + msg.toString());
                         break;
                     case NOBLE_NUM_INFO:
                         // 贵族数量
-                        logger.debug("贵族数量消息==>" + msg.toString());
+//                        logger.debug("贵族数量消息==>" + msg.toString());
+                        break;
+                    case OPEN_UP_NOBLE:
+                        msgUtil.msgService.openOrRenewNobleMsgHandle(msg);
+                        logger.debug("开通贵族消息==>" + msg.toString());
+                        break;
+                    case RENEW_NOBLE:
+                        msgUtil.msgService.openOrRenewNobleMsgHandle(msg);
+                        logger.debug("续费贵族消息==>" + msg.toString());
+                        break;
+                    case GIFT_HIT_RADIO:
+                        msgUtil.msgService.giftHitRadioMsgHandle(msg);
+                        logger.debug("礼物连击消息==>" + msg.toString());
                         break;
                     default:
                         logger.info("其它消息==>" + msg.toString());
                 }
             } catch (Exception e) {
-                logger.error("ERROR:",e);
+                logger.error("ERROR:", e);
                 logger.error("ERROR MESSAGE : " + msg.toString());
             }
         }

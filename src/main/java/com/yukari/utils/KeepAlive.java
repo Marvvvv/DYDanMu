@@ -15,14 +15,17 @@ import org.springframework.stereotype.Component;
 
 public class KeepAlive extends Thread {
 
+    @Override
     public void run() {
         DyBulletScreenClient client = DyBulletScreenClient.getInstance();
-        while (client.getReadyFlag()) {
-            client.keepAlive();
-            try {
-                Thread.sleep(45000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        while (true) {
+            if (client.getReadyFlag()) {
+                client.keepAlive();
+                try {
+                    Thread.sleep(45000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

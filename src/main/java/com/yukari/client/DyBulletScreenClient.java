@@ -172,9 +172,8 @@ public class DyBulletScreenClient {
             logger.debug("心跳包发送成功!");
         } catch(Exception e){
             // 服务器重连
-            logger.error("心跳包发送失败，重新连接服务器...",e);
-            this.readyFlag = false;
-            this.init(room_id,-9999);
+            logger.info("心跳包发送失败，重新连接服务器...",e);
+            reConnectServer();
         }
     }
 
@@ -230,14 +229,20 @@ public class DyBulletScreenClient {
     }
 
 
-    /*private void closeConnection () {
+    public void reConnectServer () {
         if (this.socket != null) {
             try {
                 this.socket.close();
+                logger.info("重新获取弹幕服务器...");
+                setReadyFlag(false);
+                init(this.room_id,-9999);
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error(e);
             }
         }
+
+
     }
-*/
+
+
 }

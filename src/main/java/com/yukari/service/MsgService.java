@@ -18,6 +18,9 @@ public interface MsgService {
 
     void shutUpMsgHandle (Map<String, Object> msg);
 
-    void nobleMsgHandle (Map<String, Object> msg);
+    void openOrRenewNobleMsgHandle (Map<String, Object> msg);
+
+    void giftHitRadioMsgHandle (Map<String, Object> msg);
+
 
 }
