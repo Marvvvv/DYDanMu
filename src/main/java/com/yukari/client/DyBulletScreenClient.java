@@ -231,17 +231,10 @@ public class DyBulletScreenClient {
 
     public void reConnectServer () {
         if (this.socket != null) {
-            try {
-                this.socket.close();
-                logger.info("重新获取弹幕服务器...");
-                setReadyFlag(false);
-                init(this.room_id,-9999);
-            } catch (IOException e) {
-                logger.error(e);
-            }
+            logger.info("重新获取弹幕服务器...");
+            setReadyFlag(false);
+            init(this.room_id,-9999);
         }
-
-
     }
 
 
